@@ -1,0 +1,29 @@
+// import { Link } from "@tanstack/react-router";
+import Link from 'next/link'
+
+import { Plus } from "lucide-react";
+
+export function EmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center text-center py-20">
+      <img
+        src="/images/empty-assignments.png"
+        alt="No assignments illustration"
+        className="h-56 w-56 object-contain"
+      />
+      <h2 className="mt-6 text-lg font-semibold">No assignments yet</h2>
+      <p className="mt-2 max-w-md text-sm text-muted-foreground">
+        Create your first assignment to start collecting and grading student
+        submissions. You can set up rubrics, define marking criteria, and let AI
+        assist with grading.
+      </p>
+      <Link
+        href="/assignments/create"
+        className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3 text-sm font-medium hover:opacity-95 transition"
+      >
+        <Plus className="h-4 w-4" />
+        Create Your First Assignment
+      </Link>
+    </div>
+  );
+}
