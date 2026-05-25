@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
+import { useAssignmentStore } from "@/store/assignmentStore";
+import { useAssignmentSocket } from "@/hooks/useAssignmentSocket";
+import { getGeneratedPaper } from "@/lib/api";
 
 const steps = [
   "Analyzing uploaded material",
@@ -13,27 +16,28 @@ const steps = [
 
 export function GeneratingView() {
   const router = useRouter();
+  const { activeAssignmentId, setGeneratedPaper } = useAssignmentStore();
+  const { progress, message, completed, failed, error } =
+    useAssignmentSocket(activeAssignmentId);
 
-  const [progress, setProgress] = useState(0);
+  const displayProgress = progress > 0 ? progress : 8;
+  const activeStep = Math.min(
+    steps.length - 1,
+    Math.floor((displayProgress / 100) * steps.length),
+  );
 
   useEffect(() => {
-    const t = setInterval(() => {
-      setProgress((p) => {
-        if (p >= 100) {
-          clearInterval(t);
-        //   setTimeout(() => navigate({ to: "/assignments/output" }), 400);
-        setTimeout(() => {
+    if (!completed || !activeAssignmentId) return;
+    (async () => {
+      try {
+        const paper = await getGeneratedPaper(activeAssignmentId);
+        setGeneratedPaper(paper);
         router.push("/assignments/output");
-        }, 400);
-          return 100;
-        }
-        return p + 2;
-      });
-    }, 80);
-    return () => clearInterval(t);
-  }, [router]);
-
-  const activeStep = Math.min(steps.length - 1, Math.floor((progress / 100) * steps.length));
+      } catch {
+        router.push("/assignments/output");
+      }
+    })();
+  }, [completed, activeAssignmentId, router, setGeneratedPaper]);
 
   return (
     <div className="max-w-2xl mx-auto py-16 text-center">
@@ -42,16 +46,20 @@ export function GeneratingView() {
       </div>
       <h1 className="mt-6 text-2xl font-semibold">Generating your assessment…</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Our AI is preparing high-quality questions tailored to your inputs.
+        {message || "Our AI is preparing high-quality questions tailored to your inputs."}
       </p>
+
+      {failed && (
+        <p className="mt-4 text-sm text-destructive">{error ?? "Generation failed"}</p>
+      )}
 
       <div className="mt-8 h-2 w-full rounded-full bg-secondary overflow-hidden">
         <div
           className="h-full bg-primary transition-[width] duration-150"
-          style={{ width: `${progress}%` }}
+          style={{ width: `${displayProgress}%` }}
         />
       </div>
-      <p className="mt-2 text-xs text-muted-foreground">{progress}%</p>
+      <p className="mt-2 text-xs text-muted-foreground">{Math.round(displayProgress)}%</p>
 
       <ul className="mt-10 space-y-3 text-left max-w-md mx-auto">
         {steps.map((s, i) => (

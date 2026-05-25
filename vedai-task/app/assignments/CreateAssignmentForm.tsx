@@ -1,15 +1,60 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, CalendarDays, Mic, Plus, UploadCloud } from "lucide-react";
 import { useAssignmentStore } from "@/store/assignmentStore";
 import { QuestionTypeRowItem } from "./QuestionTypeRow";
+import { createAssignment, triggerGeneration } from "@/lib/api";
 
 export function CreateAssignmentForm() {
   const router = useRouter();
-  const { draft, setField, addQuestionType } = useAssignmentStore();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const { draft, setField, addQuestionType, setActiveAssignmentId } = useAssignmentStore();
   const totalQuestions = draft.questionTypes.reduce((s, q) => s + q.count, 0);
   const totalMarks = draft.questionTypes.reduce((s, q) => s + q.count * q.marks, 0);
+
+  async function handleSubmit() {
+    setError(null);
+    if (!draft.title.trim()) {
+      setError("Assignment title is required");
+      return;
+    }
+    if (!draft.dueDate.trim()) {
+      setError("Due date is required");
+      return;
+    }
+    if (totalQuestions <= 0 || totalMarks <= 0) {
+      setError("Add at least one question type with positive count and marks");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const assignment = await createAssignment({
+        title: draft.title,
+        dueDate: draft.dueDate,
+        additionalInfo: draft.additionalInfo,
+        questionTypes: draft.questionTypes.map(({ type, count, marks }) => ({
+          type,
+          count,
+          marks,
+        })),
+        file,
+      });
+      setActiveAssignmentId(assignment.id);
+      await triggerGeneration(assignment.id);
+      router.push("/assignments/generating");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to create assignment");
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   return (
     <div className="max-w-4xl mx-auto pb-16">
@@ -29,6 +74,12 @@ export function CreateAssignmentForm() {
         <div className="h-1 flex-1 rounded-full bg-border" />
       </div>
 
+      {error && (
+        <p className="mt-4 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {error}
+        </p>
+      )}
+
       <section className="mt-6 rounded-2xl bg-card border border-border p-6 md:p-8">
         <h2 className="text-lg font-semibold">Assignment Details</h2>
         <p className="text-sm text-muted-foreground">
@@ -46,17 +97,28 @@ export function CreateAssignmentForm() {
           />
         </label>
 
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".pdf,.txt,application/pdf,text/plain"
+          className="hidden"
+          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+        />
         <div className="mt-4 rounded-2xl border-2 border-dashed border-border bg-secondary/40 p-8 text-center">
           <UploadCloud className="mx-auto h-7 w-7 text-muted-foreground" />
           <p className="mt-3 text-sm font-medium">Choose a file or drag &amp; drop it here</p>
-          <p className="mt-1 text-xs text-muted-foreground">JPEG, PNG, upto 10MB</p>
-          <button className="mt-4 inline-flex rounded-full border border-border bg-card px-5 py-2 text-sm hover:bg-secondary transition">
+          <p className="mt-1 text-xs text-muted-foreground">PDF or text, up to 10MB (optional)</p>
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="mt-4 inline-flex rounded-full border border-border bg-card px-5 py-2 text-sm hover:bg-secondary transition"
+          >
             Browse Files
           </button>
+          {file && (
+            <p className="mt-2 text-xs text-muted-foreground">Selected: {file.name}</p>
+          )}
         </div>
-        <p className="mt-2 text-center text-xs text-muted-foreground">
-          Upload images of your preferred document/image
-        </p>
 
         <div className="mt-6">
           <label className="block text-sm font-medium mb-2">Due Date</label>
@@ -85,6 +147,7 @@ export function CreateAssignmentForm() {
           </div>
 
           <button
+            type="button"
             onClick={addQuestionType}
             className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-foreground hover:opacity-80"
           >
@@ -118,6 +181,7 @@ export function CreateAssignmentForm() {
               className="w-full resize-none rounded-xl border border-border bg-card px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40 pr-12"
             />
             <button
+              type="button"
               className="absolute right-3 bottom-3 h-8 w-8 grid place-items-center rounded-full hover:bg-secondary"
               aria-label="Voice input"
             >
@@ -129,16 +193,19 @@ export function CreateAssignmentForm() {
 
       <div className="mt-6 flex items-center justify-between">
         <button
+          type="button"
           onClick={() => router.push("/assignments")}
           className="inline-flex items-center gap-2 rounded-full bg-card border border-border px-5 py-2.5 text-sm hover:bg-secondary transition"
         >
           <ArrowLeft className="h-4 w-4" /> Previous
         </button>
         <button
-          onClick={() => router.push("/assignments/generating")}
-          className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-2.5 text-sm font-medium hover:opacity-95 transition"
+          type="button"
+          disabled={submitting}
+          onClick={handleSubmit}
+          className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-2.5 text-sm font-medium hover:opacity-95 transition disabled:opacity-60"
         >
-          Next <ArrowRight className="h-4 w-4" />
+          {submitting ? "Submitting…" : "Next"} <ArrowRight className="h-4 w-4" />
         </button>
       </div>
     </div>

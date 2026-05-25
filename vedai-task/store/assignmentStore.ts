@@ -17,7 +17,11 @@ export type AssignmentDraft = {
 
 type State = {
   draft: AssignmentDraft;
+  activeAssignmentId: string | null;
+  generatedPaper: import("@/lib/api").PaperResponse | null;
   setField: <K extends keyof AssignmentDraft>(k: K, v: AssignmentDraft[K]) => void;
+  setActiveAssignmentId: (id: string | null) => void;
+  setGeneratedPaper: (paper: import("@/lib/api").PaperResponse | null) => void;
   addQuestionType: () => void;
   updateQuestionType: (id: string, patch: Partial<QuestionTypeRow>) => void;
   removeQuestionType: (id: string) => void;
@@ -39,7 +43,11 @@ const initialDraft: AssignmentDraft = {
 
 export const useAssignmentStore = create<State>((set) => ({
   draft: initialDraft,
+  activeAssignmentId: null,
+  generatedPaper: null,
   setField: (k, v) => set((s) => ({ draft: { ...s.draft, [k]: v } })),
+  setActiveAssignmentId: (id) => set({ activeAssignmentId: id }),
+  setGeneratedPaper: (paper) => set({ generatedPaper: paper }),
   addQuestionType: () =>
     set((s) => ({
       draft: {

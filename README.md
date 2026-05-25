@@ -1,400 +1,631 @@
-<!-- 
-[Link-of-the-crazzy-assignment](https://www.notion.so/VedaAI-Full-Stack-Engineering-Assignment-32748238bd318068a430e90272b485d7)
-# Vedai Assignment Generator (Next.js)
-[figma-file-link](https://www.figma.com/design/nB2HMm1BhTpmHcHrmEslGB/VedaAI---Hiring-Assignment?node-id=0-1&p=f&t=tUGLkRYU2B1jXhCg-0)
+# VedaAI — AI Assessment Creator
 
-[my-figma-duplicated-copy-file](https://www.figma.com/design/CSiaWfh0xUNaag43sKP03b/VedaAI---Hiring-Assignment--Copy-?node-id=0-1&t=N5chhirCO1hRAUEq-0)
-
-This repo contains the **Assignment Generator UI** (Next.js + TypeScript) for creating assignments and generating papers.
-
-
----
-
-## Project Structure
-
-- `client/`  Next.js (frontend)
-  - `app/assignments/*`assignment list, create flow, and generated paper views
-  - `app/layout.tsx`  root layout
-
-
----
-
-## Prerequisites
-
-- Node.js 18+
-- pnpm (recommended) or npm
-
----
-
-## Local Setup & Run (Frontend)
-
-### 1) Install dependencies
-
-```bash
-cd Vedai-assignment/client
-pnpm install
-```
-
-(If you prefer npm)
-
-```bash
-cd Vedai-assignment/client
-npm install
-```
-
-### 2) Run the dev server
-
-```bash
-pnpm dev
-```
-
-(or)
-
-```bash
-npm run dev
-```
-
-### 3) Open in browser
-
-Visit:
-- `http://localhost:3000`
-
----
-
-## Deployment
-
-### Vercel
-
-The project is configured for Vercel builds from `client/`.
-
-
----
-
-## Architecture Overview
-
-High-level flow (UI-only):
-
-1. User navigates to **/assignments**
-2. User opens **/assignments/create**
-3. User fills assignment inputs (question type, topic, etc.)
-4. The UI requests generation
-5. Generated output is shown under **/assignments/output** (and related views) -->
-
-
-# VedaAI  Assignment Generator
-
-AI-powered Assignment & Question Paper Generator built using **Next.js + TypeScript** inspired by the provided Figma designs.
+AI-powered assignment and question-paper generator for teachers. Built from the [VedaAI Figma designs](https://www.figma.com/design/nB2HMm1BhTpmHcHrmEslGB/VedaAI---Hiring-Assignment?node-id=0-1&p=f&t=tUGLkRYU2B1jXhCg-0).
 
 ## Live Demo
 
-- [Deployed Link](https://ai-assignment-generator-nextjs-type-eight.vercel.app/): 
+- [Deployed frontend](https://ai-assignment-generator-nextjs-type-eight.vercel.app/)
 
-
----
-## Link-> https://ai-assignment-generator-nextjs-type-eight.vercel.app/
-
-# Assignment Reference
+## Assignment reference
 
 - [VedaAI Full Stack Engineering Assignment](https://www.notion.so/VedaAI-Full-Stack-Engineering-Assignment-32748238bd318068a430e90272b485d7)
-
----
-
-# Figma References
-
-- [Original Figma Design](https://www.figma.com/design/nB2HMm1BhTpmHcHrmEslGB/VedaAI---Hiring-Assignment?node-id=0-1&p=f&t=tUGLkRYU2B1jXhCg-0)
-
-- [My Duplicated Figma Copy](https://www.figma.com/design/CSiaWfh0xUNaag43sKP03b/VedaAI---Hiring-Assignment--Copy-?node-id=0-1&t=N5chhirCO1hRAUEq-0)
+- [Figma — original](https://www.figma.com/design/nB2HMm1BhTpmHcHrmEslGB/VedaAI---Hiring-Assignment?node-id=0-1&p=f&t=tUGLkRYU2B1jXhCg-0)
+- [Figma — duplicated copy](https://www.figma.com/design/CSiaWfh0xUNaag43sKP03b/VedaAI---Hiring-Assignment--Copy-?node-id=0-1&t=N5chhirCO1hRAUEq-0)
 
 ---
 
 # Overview
 
-This project is an AI-based Assessment Creator platform where teachers can:
+Teachers can:
 
-- Create assignments
-- Configure question types
-- Define marks and difficulty
-- Generate structured question papers
-- View generated outputs in a clean exam-paper layout
-
-The frontend was implemented based on the provided Figma UI with focus on:
-
-- Pixel-perfect implementation
-- Responsive layout
-- Clean component architecture
-- Modern UI/UX
-- Scalable folder structure
+- Create assignments with question types, marks, and due dates
+- Upload optional reference files (PDF / text)
+- Generate structured question papers via AI (not raw LLM output)
+- See real-time generation progress (WebSocket)
+- View and download formatted exam papers (PDF)
 
 ---
 
-# Architecture Overview
+# Project structure
 
-## High-Level Flow
+```txt
+Vedai-assignment/
+├── vedai-task/          # Main Next.js frontend (App Router)
+├── backend/             # Express API + workers (single-file server)
+├── client/              # Alternate / earlier Next.js UI
+└── README.md
+```
+
+| Folder | Role |
+|--------|------|
+| `vedai-task/` | Primary UI — create, generating, output pages |
+| `backend/` | REST API, MongoDB, Redis, BullMQ, Socket.IO, OpenAI, PDF |
+| `client/` | Additional Next.js frontend variant |
+
+---
+
+# Architecture overview
+
+## Full-stack flow
+
+```mermaid
+sequenceDiagram
+  participant UI as Next.js (vedai-task)
+  participant API as Express API
+  participant Q as BullMQ
+  participant W as Worker
+  participant AI as OpenAI
+  participant DB as MongoDB
+  participant WS as Socket.IO
+
+  UI->>API: POST /api/assignments
+  API->>DB: Save assignment
+  UI->>API: POST /api/assignments/:id/generate
+  API->>Q: Enqueue AI job
+  API-->>UI: 202 queued
+  UI->>WS: join_assignment(id)
+  Q->>W: Process generation
+  W->>WS: generation_progress
+  W->>AI: Structured JSON prompt
+  AI-->>W: Validated JSON paper
+  W->>DB: Save QuestionPaper
+  W->>WS: generation_completed
+  W->>Q: Enqueue PDF job
+  UI->>API: GET /api/assignments/:id/paper
+  UI->>API: GET /api/assignments/:id/pdf
+```
+
+## High-level product flow
 
 ```mermaid
 flowchart TD
-
-A[Teacher Opens Platform]
---> B[Create Assignment]
-
-B --> C[Fill Assignment Details]
-
-C --> D[Select Question Types]
-C --> E[Upload Reference Files]
-C --> F[Add Instructions]
-
-D --> G[Generate Assessment]
-
-G --> H[Structured Prompt Builder]
-
-H --> I[AI Processing Layer]
-
-I --> J[Question Paper Generator]
-
-J --> K[Formatted Output UI]
-
-K --> L[Export / Download PDF]
+  A[Teacher opens /assignments] --> B[Create assignment]
+  B --> C[Fill form + optional file]
+  C --> D[POST /api/assignments]
+  D --> E[POST /api/assignments/:id/generate]
+  E --> F[WebSocket progress]
+  F --> G[Structured paper UI]
+  G --> H[Download PDF]
 ```
 
 ---
 
-# Planned Backend Workflow
+# Tech stack
 
-```mermaid
-flowchart LR
+## Frontend (`vedai-task/`)
 
-A[Frontend Request]
---> B[Express API]
+- Next.js 15+ (App Router)
+- TypeScript
+- Zustand (state)
+- Tailwind CSS
+- Socket.IO Client
+- Lucide Icons
 
-B --> C[BullMQ Queue]
+## Backend (`backend/`)
 
-C --> D[Worker]
-
-D --> E[AI Generation]
-
-E --> F[MongoDB Storage]
-
-F --> G[Redis Cache]
-
-G --> H[WebSocket Update]
-
-H --> I[Frontend UI Update]
-```
-
----
-
+- Node.js + Express (TypeScript)
+- MongoDB + Mongoose
+- Redis (cache + BullMQ)
+- BullMQ (AI + PDF job queues)
+- Socket.IO (real-time updates)
+- OpenAI (structured JSON generation)
+- pdf-lib + pdf-parse (PDF export & text extraction)
+- Zod (validation)
+- Multer (file uploads)
 
 ---
 
-# Local Setup
+# Local setup (full stack)
 
-## 1. Clone Repository
+## Prerequisites
+
+- Node.js 18+
+- MongoDB (local or [Atlas](https://www.mongodb.com/atlas))
+- Redis (local or Upstash / Railway)
 
 ```bash
-git clone https://github.com/KavyaKapoor420/ai-assignment-generator-Nextjs-typescript.git
+# macOS examples
+brew install redis
+brew services start redis
+
+brew tap mongodb/brew && brew install mongodb-community
+brew services start mongodb-community
 ```
 
 ---
 
-## 2. Navigate to Frontend
+## Backend setup
 
 ```bash
-cd ai-assignment-generator-Nextjs-typescript/client
-```
-
----
-
-## 3. Install Dependencies
-
-Using pnpm:
-
-```bash
-pnpm install
-```
-
-or npm:
-
-```bash
+cd backend
+cp .env.example .env
 npm install
-```
-
----
-
-## 4. Run Development Server
-
-```bash
-pnpm dev
-```
-
-or
-
-```bash
 npm run dev
 ```
 
+- API: `http://localhost:5000`
+- Health: `GET http://localhost:5000/api/health`
+
+See `backend/.env.example` for all variables. **`OPENAI_API_KEY`** is optional — without it, the server returns a mock structured paper for local demos.
+
 ---
 
-## 5. Open Browser
+## Frontend setup (`vedai-task/`)
 
-```txt
-http://localhost:3000
+```bash
+cd vedai-task
+cp .env.local.example .env.local
+npm install
+npm run dev
+```
+
+`.env.local`:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5000/api
+NEXT_PUBLIC_SOCKET_URL=http://localhost:5000
+```
+
+Open: `http://localhost:3000`
+
+---
+
+## Alternate frontend (`client/`)
+
+```bash
+cd client
+pnpm install   # or npm install
+pnpm dev
 ```
 
 ---
 
+# Frontend — features & structure
 
-# Features Implemented
+## Features implemented
 
-## Assignment Dashboard
+### Assignment dashboard
 
 - Assignment listing UI
-- Search assignments
-- Filter UI
-- Create Assignment CTA
+- Search and filter UI
+- Create assignment CTA
 
----
+### Assignment creation
 
-## Assignment Creation
-
-- Due date input
-- Dynamic question sections
-- Add/remove question types
-- Marks and question counters
+- Title and due date
+- Dynamic question types (add / remove rows)
+- Per-type question count and marks
+- Total questions and marks summary
 - Additional instructions
-- File upload UI
-- Responsive form layout
+- Optional file upload (PDF / text)
+- Form validation
+- Submits to backend API and starts generation
 
----
+### Generating screen
 
-## Generated Output UI
+- Progress bar driven by WebSocket events
+- Step indicators (analyzing, drafting, balancing, compiling)
+- Redirects to output on `generation_completed`
 
-- Structured question paper layout
-- Student information section
-- Question grouping
-- Difficulty indicators
-- Marks display
-- Exam-style formatting
+### Generated output
 
----
+- Exam-style layout (student info lines, sections, questions)
+- Difficulty badges (Easy / Moderate / Challenging)
+- Marks per question
+- Regenerate and PDF download (API-backed)
 
-# Tech Stack
-
-## Frontend
-
-- Next.js 15
-- TypeScript
-- App Router
-- Redux Toolkit
-- Tailwind CSS
-- Lucide Icons
-
----
-
-## Planned Backend Architecture
-
-- Node.js
-- Express.js
-- MongoDB
-- Redis
-- BullMQ
-- WebSockets (Socket.IO)
-
----
-
-## AI Layer
-
-Planned integration support for:
-
-- OpenAI GPT
-- Claude
-- OSS Models
-
----
-
-# Project Structure
+## Frontend project structure
 
 ```txt
-client/
-│
+vedai-task/
 ├── app/
 │   ├── assignments/
 │   │   ├── create/
+│   │   ├── generating/
 │   │   ├── output/
 │   │   └── page.tsx
-│   │
-│   ├── layout.tsx
-│   └── page.tsx
-│
+│   └── layout/
 ├── components/
-│   ├── layout/
-│   ├── ui/
-│   └── veda/
-│
+├── hooks/
+│   └── useAssignmentSocket.ts
 ├── lib/
-├── public/
+│   └── api.ts
 ├── store/
-└── styles/
+│   └── assignmentStore.ts
+└── app/data/mockAssignments.tsx
 ```
 
+## Frontend integration
 
+| File | Purpose |
+|------|---------|
+| `lib/api.ts` | HTTP client — create, list, generate, fetch paper, PDF URL |
+| `hooks/useAssignmentSocket.ts` | Socket.IO — progress, completed, failed |
+| `store/assignmentStore.ts` | Zustand — draft form, `activeAssignmentId`, generated paper |
 
-# Design & UI Decisions
+## Design decisions
 
-- Used reusable component architecture
-- Followed App Router structure
-- Maintained scalable folder separation
-- Focused on exam-paper readability
-- Mobile responsive layout
-- Clean typography hierarchy
-- Modern rounded UI matching Figma
-
----
-
-# State Management
-
-Redux Toolkit was used/planned for:
-
-- Assignment state
-- Form state
-- Generated paper state
-- Async API handling
+- App Router with reusable UI components
+- Mobile-responsive layout aligned with Figma
+- Structured paper rendering (never raw LLM text on screen)
+- Clean typography and section hierarchy
 
 ---
 
-# Future Improvements
+# Backend — features & architecture
 
-- AI integration
-- PDF export
-- Real-time generation updates
-- Assignment history
-- Teacher authentication
-- Better caching
-- WebSocket live status
-- Rich text question editor
+Production backend lives in a **single file**: `backend/src/server.ts` (Express + workers in one process). Deeper notes: `backend/BACKEND.md`.
+
+## What the backend does
+
+| Capability | Implementation |
+|------------|----------------|
+| Assignment CRUD | MongoDB `Assignment` model |
+| AI generation queue | BullMQ `AI_GENERATION_QUEUE` |
+| PDF generation queue | BullMQ `PDF_GENERATION_QUEUE` |
+| Structured AI output | Zod-validated JSON (sections → questions) |
+| Real-time updates | Socket.IO rooms `assignment:{id}` |
+| Caching | Redis (list, assignment, paper) |
+| File upload | Multer → `./uploads` |
+| PDF download | pdf-lib → `./generated-pdfs` |
+| Security / ops | Helmet, CORS, compression, rate limit (120/min) |
+
+## Backend project structure
+
+```txt
+backend/
+├── src/
+│   └── server.ts       # Full server (API, models, queues, workers, sockets)
+├── .env.example
+├── package.json
+├── tsconfig.json
+└── BACKEND.md          # Extended API & deployment notes
+```
+
+## Internal sections (`server.ts`)
+
+| Section | Purpose |
+|---------|---------|
+| ENV & config | Port, MongoDB, Redis, OpenAI, upload paths |
+| Zod schemas | Request body + AI response validation |
+| Mongoose models | `Assignment`, `QuestionPaper` |
+| Redis | Cache keys + BullMQ connection |
+| BullMQ | AI and PDF workers with retries |
+| OpenAI service | Prompt builder, JSON parse, mock fallback |
+| PDF service | Exam layout via pdf-lib |
+| Socket.IO | `generation_*` events per assignment |
+| Express routes | REST API + multer + error handler |
+
+## MongoDB models
+
+**Assignment**
+
+- `title`, `dueDate`, `instructions`, `additionalInfo`
+- `questionTypes[]` — `{ type, count, marks }`
+- `totalQuestions`, `totalMarks`
+- `status` — `draft` \| `queued` \| `generating` \| `completed` \| `failed`
+- `progress`, `progressMessage`, `errorMessage`
+- `uploadedFilePath`, `uploadedText`
+- `questionPaperId`
+
+**QuestionPaper**
+
+- `assignmentId`
+- `sections[]` — `{ title, instruction, heading, questions[] }`
+- `questions[]` — `{ question, difficulty, marks }`
+- `metadata` — subject, class, time, max marks, notes
+- `pdfPath`
+
+## BullMQ queues
+
+| Queue | Job | Result |
+|-------|-----|--------|
+| `AI_GENERATION_QUEUE` | Build prompt → OpenAI → validate JSON → save paper | Socket progress + DB update |
+| `PDF_GENERATION_QUEUE` | Render exam PDF | `GET /api/assignments/:id/pdf` |
+
+Retries: 3 attempts, exponential backoff.
+
+## WebSocket events
+
+Connect to `NEXT_PUBLIC_SOCKET_URL`, then:
+
+```ts
+socket.emit("join_assignment", assignmentId);
+
+socket.on("generation_started", ...);
+socket.on("generation_progress", ...);  // { progress, message, status }
+socket.on("generation_completed", ...);
+socket.on("generation_failed", ...);
+```
+
+## AI response shape (validated, not rendered raw)
+
+```json
+{
+  "sections": [
+    {
+      "title": "Section A",
+      "instruction": "Attempt all questions",
+      "heading": "Short Answer Questions",
+      "questions": [
+        { "question": "...", "difficulty": "medium", "marks": 5 }
+      ]
+    }
+  ],
+  "metadata": {
+    "subject": "Science",
+    "className": "Grade 8",
+    "timeAllowed": "45 minutes",
+    "maxMarks": 50,
+    "notes": "All questions are compulsory."
+  }
+}
+```
+
+API `GET /paper` maps this to the frontend shape (`text`, `instructions`, normalized difficulty labels).
 
 ---
 
-# Challenges Faced
+# REST API summary
 
-- Migrating generated Vite/TanStack code to Next.js App Router
-- Preserving pixel-perfect UI from Figma
-- Managing scalable component structure
-- Handling responsive layout consistency
+Base URL: `http://localhost:5000/api` (or your deployed host).
+
+| Method | Path | Code |
+|--------|------|------|
+| POST | `/api/assignments` | 201 |
+| GET | `/api/assignments` | 200 |
+| GET | `/api/assignments/:id` | 200 |
+| POST | `/api/assignments/:id/generate` | 202 |
+| GET | `/api/assignments/:id/status` | 200 |
+| GET | `/api/assignments/:id/paper` | 200 |
+| GET | `/api/assignments/:id/pdf` | 200 (file stream) |
+
+Additional: `GET /api/health` — server, MongoDB, Redis, OpenAI status.
+
+---
+
+## API details
+
+### `POST /api/assignments` — Create assignment
+
+**Content-Type:** `multipart/form-data`
+
+| Field | Type | Required |
+|-------|------|----------|
+| `title` | string | yes |
+| `dueDate` | string | yes |
+| `questionTypes` | JSON string | yes |
+| `additionalInfo` | string | no |
+| `instructions` | string | no |
+| `file` | PDF / txt | no |
+
+**Example `questionTypes`:**
+
+```json
+[
+  { "type": "Multiple Choice Questions", "count": 4, "marks": 1 },
+  { "type": "Short Questions", "count": 3, "marks": 2 }
+]
+```
+
+**Response `201`:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "665f1a2b3c4d5e6f7a8b9c0d",
+    "title": "Quiz on Electricity",
+    "dueDate": "21-06-2025",
+    "status": "draft",
+    "totalQuestions": 7,
+    "totalMarks": 10,
+    "progress": 0,
+    "questionPaperId": null
+  }
+}
+```
+
+---
+
+### `GET /api/assignments` — List assignments
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "665f1a2b3c4d5e6f7a8b9c0d",
+      "title": "Quiz on Electricity",
+      "dueDate": "21-06-2025",
+      "assignedOn": "20-06-2025",
+      "status": "completed"
+    }
+  ]
+}
+```
+
+---
+
+### `GET /api/assignments/:id` — Get one assignment
+
+**Response `200`:** Same shape as create response, includes `progress`, `progressMessage`, `status`.
+
+**Response `404`:** Assignment not found.
+
+---
+
+### `POST /api/assignments/:id/generate` — Start AI generation
+
+**Response `202`:**
+
+```json
+{
+  "success": true,
+  "message": "Generation queued",
+  "data": {
+    "assignment": { "id": "...", "status": "queued" },
+    "jobId": "1"
+  }
+}
+```
+
+**Response `409`:** Generation already in progress.
+
+---
+
+### `GET /api/assignments/:id/status` — Poll generation status
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "665f1a2b3c4d5e6f7a8b9c0d",
+    "status": "generating",
+    "progress": 35,
+    "message": "Drafting questions",
+    "questionPaperId": null
+  }
+}
+```
+
+---
+
+### `GET /api/assignments/:id/paper` — Structured question paper
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "school": "Science",
+    "subject": "Science",
+    "className": "Grade 8",
+    "timeAllowed": "45 minutes",
+    "maxMarks": 50,
+    "notes": "All questions are compulsory.",
+    "sections": [
+      {
+        "id": "A",
+        "title": "Section A",
+        "heading": "Short Questions",
+        "instructions": "Attempt all questions",
+        "questions": [
+          {
+            "text": "Define electroplating.",
+            "difficulty": "Easy",
+            "marks": 2
+          }
+        ]
+      }
+    ],
+    "pdfAvailable": true
+  }
+}
+```
+
+**Response `404`:** Paper not generated yet.
+
+---
+
+### `GET /api/assignments/:id/pdf` — Download PDF
+
+**Response `200`:** `application/pdf` file stream.
+
+**Response `404`:** PDF not ready (wait a few seconds after generation completes).
+
+---
+
+## Environment variables
+
+### Backend (`backend/.env`)
+
+```env
+PORT=5000
+NODE_ENV=development
+CORS_ORIGIN=http://localhost:3000
+
+MONGODB_URI=mongodb://127.0.0.1:27017/vedaai
+REDIS_URL=redis://127.0.0.1:6379
+
+OPENAI_API_KEY=sk-your-key-here
+OPENAI_MODEL=gpt-4o-mini
+
+UPLOAD_DIR=./uploads
+PDF_DIR=./generated-pdfs
+CACHE_TTL_SEC=300
+```
+
+### Frontend (`vedai-task/.env.local`)
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5000/api
+NEXT_PUBLIC_SOCKET_URL=http://localhost:5000
+```
+
+---
+
+# Deployment
+
+| Component | Suggested platform |
+|-----------|-------------------|
+| Frontend (`vedai-task`) | [Vercel](https://vercel.com) |
+| Backend API + workers | [Railway](https://railway.app) or [Render](https://render.com) |
+| MongoDB | [MongoDB Atlas](https://www.mongodb.com/atlas) |
+| Redis | [Upstash](https://upstash.com) or Railway Redis |
+
+**Backend deploy commands:**
+
+```bash
+npm run build
+npm start
+```
+
+Set all variables from `backend/.env.example` on the host. Point frontend env vars to the deployed API and Socket URL.
+
+---
+
+# Development workflow
+
+1. Start **Redis** and **MongoDB**
+2. `cd backend && npm run dev` — API on port **5000**, workers run in-process
+3. `cd vedai-task && npm run dev` — UI on port **3000**
+4. Create assignment → auto-triggers generate → watch `/assignments/generating`
+5. On complete → `/assignments/output` loads paper from API
+6. Download PDF when `pdfAvailable` is true
+
+---
+
+# Future improvements
+
+- Teacher authentication (JWT / sessions)
+- Assignment list wired fully to `GET /api/assignments` (partially ready on API)
+- Cloud file storage (S3 / Cloudinary) instead of local disk
+- Answer key generation in AI pipeline
+- Rich text / LaTeX question editor
+
+---
+
+# Challenges faced
+
+- Migrating generated UI code to Next.js App Router
+- Preserving Figma-aligned responsive layout
+- Parsing and validating structured AI JSON (never showing raw LLM output)
+- Coordinating BullMQ jobs with Socket.IO progress for a smooth UX
 
 ---
 
 # Submission
 
-## GitHub Repository
-
-- Clean architecture
-- Modular components
-- Reusable UI structure
-- Responsive design
-
-## Deployment
-
-- Hosted on Vercel
+- GitHub repository with frontend + backend
+- README architecture and setup (this file)
+- Deployed frontend link (Vercel)
+- Backend deployable to Railway/Render with Atlas + Redis
 
 ---
 
