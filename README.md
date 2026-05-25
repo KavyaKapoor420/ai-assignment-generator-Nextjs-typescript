@@ -1,4 +1,4 @@
-# VedaAI — AI Assessment Creator
+# VedaAI  AI Assessment Creator
 
 AI-powered assignment and question-paper generator for teachers. Built from the [VedaAI Figma designs](https://www.figma.com/design/nB2HMm1BhTpmHcHrmEslGB/VedaAI---Hiring-Assignment?node-id=0-1&p=f&t=tUGLkRYU2B1jXhCg-0).
 
@@ -9,8 +9,8 @@ AI-powered assignment and question-paper generator for teachers. Built from the 
 ## Assignment reference
 
 - [VedaAI Full Stack Engineering Assignment](https://www.notion.so/VedaAI-Full-Stack-Engineering-Assignment-32748238bd318068a430e90272b485d7)
-- [Figma — original](https://www.figma.com/design/nB2HMm1BhTpmHcHrmEslGB/VedaAI---Hiring-Assignment?node-id=0-1&p=f&t=tUGLkRYU2B1jXhCg-0)
-- [Figma — duplicated copy](https://www.figma.com/design/CSiaWfh0xUNaag43sKP03b/VedaAI---Hiring-Assignment--Copy-?node-id=0-1&t=N5chhirCO1hRAUEq-0)
+- [Figma  original](https://www.figma.com/design/nB2HMm1BhTpmHcHrmEslGB/VedaAI---Hiring-Assignment?node-id=0-1&p=f&t=tUGLkRYU2B1jXhCg-0)
+- [Figma  duplicated copy](https://www.figma.com/design/CSiaWfh0xUNaag43sKP03b/VedaAI---Hiring-Assignment--Copy-?node-id=0-1&t=N5chhirCO1hRAUEq-0)
 
 ---
 
@@ -38,7 +38,7 @@ Vedai-assignment/
 
 | Folder | Role |
 |--------|------|
-| `vedai-task/` | Primary UI — create, generating, output pages |
+| `vedai-task/` | Primary UI  create, generating, output pages |
 | `backend/` | REST API, MongoDB, Redis, BullMQ, Socket.IO, OpenAI, PDF |
 | `client/` | Additional Next.js frontend variant |
 
@@ -90,31 +90,6 @@ flowchart TD
 
 ---
 
-# Tech stack
-
-## Frontend (`vedai-task/`)
-
-- Next.js 15+ (App Router)
-- TypeScript
-- Zustand (state)
-- Tailwind CSS
-- Socket.IO Client
-- Lucide Icons
-
-## Backend (`backend/`)
-
-- Node.js + Express (TypeScript)
-- MongoDB + Mongoose
-- Redis (cache + BullMQ)
-- BullMQ (AI + PDF job queues)
-- Socket.IO (real-time updates)
-- OpenAI (structured JSON generation)
-- pdf-lib + pdf-parse (PDF export & text extraction)
-- Zod (validation)
-- Multer (file uploads)
-
----
-
 # Local setup (full stack)
 
 ## Prerequisites
@@ -146,7 +121,7 @@ npm run dev
 - API: `http://localhost:5000`
 - Health: `GET http://localhost:5000/api/health`
 
-See `backend/.env.example` for all variables. **`OPENAI_API_KEY`** is optional — without it, the server returns a mock structured paper for local demos.
+See `backend/.env.example` for all variables. **`OPENAI_API_KEY`** is optional  without it, the server returns a mock structured paper for local demos.
 
 ---
 
@@ -180,7 +155,7 @@ pnpm dev
 
 ---
 
-# Frontend — features & structure
+# Frontend features & structure
 
 ## Features implemented
 
@@ -239,9 +214,9 @@ vedai-task/
 
 | File | Purpose |
 |------|---------|
-| `lib/api.ts` | HTTP client — create, list, generate, fetch paper, PDF URL |
-| `hooks/useAssignmentSocket.ts` | Socket.IO — progress, completed, failed |
-| `store/assignmentStore.ts` | Zustand — draft form, `activeAssignmentId`, generated paper |
+| `lib/api.ts` | HTTP client  create, list, generate, fetch paper, PDF URL |
+| `hooks/useAssignmentSocket.ts` | Socket.IO  progress, completed, failed |
+| `store/assignmentStore.ts` | Zustand  draft form, `activeAssignmentId`, generated paper |
 
 ## Design decisions
 
@@ -252,7 +227,7 @@ vedai-task/
 
 ---
 
-# Backend — features & architecture
+# Backend features & architecture
 
 Production backend lives in a **single file**: `backend/src/server.ts` (Express + workers in one process). Deeper notes: `backend/BACKEND.md`.
 
@@ -380,13 +355,13 @@ Base URL: `http://localhost:5000/api` (or your deployed host).
 | GET | `/api/assignments/:id/paper` | 200 |
 | GET | `/api/assignments/:id/pdf` | 200 (file stream) |
 
-Additional: `GET /api/health` — server, MongoDB, Redis, OpenAI status.
+Additional: `GET /api/health`  server, MongoDB, Redis, OpenAI status.
 
 ---
 
 ## API details
 
-### `POST /api/assignments` — Create assignment
+### `POST /api/assignments`  Create assignment
 
 **Content-Type:** `multipart/form-data`
 
@@ -428,7 +403,7 @@ Additional: `GET /api/health` — server, MongoDB, Redis, OpenAI status.
 
 ---
 
-### `GET /api/assignments` — List assignments
+### `GET /api/assignments` List assignments
 
 **Response `200`:**
 
@@ -449,7 +424,7 @@ Additional: `GET /api/health` — server, MongoDB, Redis, OpenAI status.
 
 ---
 
-### `GET /api/assignments/:id` — Get one assignment
+### `GET /api/assignments/:id`  Get one assignment
 
 **Response `200`:** Same shape as create response, includes `progress`, `progressMessage`, `status`.
 
@@ -457,7 +432,7 @@ Additional: `GET /api/health` — server, MongoDB, Redis, OpenAI status.
 
 ---
 
-### `POST /api/assignments/:id/generate` — Start AI generation
+### `POST /api/assignments/:id/generate`  Start AI generation
 
 **Response `202`:**
 
@@ -476,7 +451,7 @@ Additional: `GET /api/health` — server, MongoDB, Redis, OpenAI status.
 
 ---
 
-### `GET /api/assignments/:id/status` — Poll generation status
+### `GET /api/assignments/:id/status`  Poll generation status
 
 **Response `200`:**
 
@@ -495,7 +470,7 @@ Additional: `GET /api/health` — server, MongoDB, Redis, OpenAI status.
 
 ---
 
-### `GET /api/assignments/:id/paper` — Structured question paper
+### `GET /api/assignments/:id/paper`  Structured question paper
 
 **Response `200`:**
 
@@ -533,7 +508,7 @@ Additional: `GET /api/health` — server, MongoDB, Redis, OpenAI status.
 
 ---
 
-### `GET /api/assignments/:id/pdf` — Download PDF
+### `GET /api/assignments/:id/pdf` Download PDF
 
 **Response `200`:** `application/pdf` file stream.
 
@@ -593,8 +568,8 @@ Set all variables from `backend/.env.example` on the host. Point frontend env va
 # Development workflow
 
 1. Start **Redis** and **MongoDB**
-2. `cd backend && npm run dev` — API on port **5000**, workers run in-process
-3. `cd vedai-task && npm run dev` — UI on port **3000**
+2. `cd backend && npm run dev`  API on port **5000**, workers run in-process
+3. `cd vedai-task && npm run dev`  UI on port **3000**
 4. Create assignment → auto-triggers generate → watch `/assignments/generating`
 5. On complete → `/assignments/output` loads paper from API
 6. Download PDF when `pdfAvailable` is true
@@ -629,6 +604,32 @@ Set all variables from `backend/.env.example` on the host. Point frontend env va
 
 ---
 
+# Tech stack
+
+## Frontend (`vedai-task/`)
+
+- Next.js 15+ (App Router)
+- TypeScript
+- Zustand (state)
+- Tailwind CSS
+- Socket.IO Client
+- Lucide Icons
+
+## Backend (`backend/`)
+
+- Node.js + Express (TypeScript)
+- MongoDB + Mongoose
+- Redis (cache + BullMQ)
+- BullMQ (AI + PDF job queues)
+- Socket.IO (real-time updates)
+- OpenAI (structured JSON generation)
+- pdf-lib + pdf-parse (PDF export & text extraction)
+- Zod (validation)
+- Multer (file uploads)
+
+---
+
+
 # Author
 
-Kavya Kapoor
+Made with love by :Kavya Kapoor :) 
