@@ -67,6 +67,7 @@ const IcArrowLeft = ({ size = 18, color = "currentColor" }) => (
     <path d="M11 4l-5 5 5 5" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
   
+
 );
 const IcArrowRight = ({ size = 16, color = "currentColor" }) => (
   <svg width={size} height={size} viewBox="0 0 16 16" fill="none">
