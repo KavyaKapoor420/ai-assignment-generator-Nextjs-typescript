@@ -127,6 +127,122 @@ The frontend was implemented based on the provided Figma UI with focus on:
 
 ---
 
+# Architecture Overview
+
+## High-Level Flow
+
+```mermaid
+flowchart TD
+
+A[Teacher Opens Platform]
+--> B[Create Assignment]
+
+B --> C[Fill Assignment Details]
+
+C --> D[Select Question Types]
+C --> E[Upload Reference Files]
+C --> F[Add Instructions]
+
+D --> G[Generate Assessment]
+
+G --> H[Structured Prompt Builder]
+
+H --> I[AI Processing Layer]
+
+I --> J[Question Paper Generator]
+
+J --> K[Formatted Output UI]
+
+K --> L[Export / Download PDF]
+```
+
+---
+
+# Planned Backend Workflow
+
+```mermaid
+flowchart LR
+
+A[Frontend Request]
+--> B[Express API]
+
+B --> C[BullMQ Queue]
+
+C --> D[Worker]
+
+D --> E[AI Generation]
+
+E --> F[MongoDB Storage]
+
+F --> G[Redis Cache]
+
+G --> H[WebSocket Update]
+
+H --> I[Frontend UI Update]
+```
+
+---
+
+
+---
+
+# Local Setup
+
+## 1. Clone Repository
+
+```bash
+git clone https://github.com/KavyaKapoor420/ai-assignment-generator-Nextjs-typescript.git
+```
+
+---
+
+## 2. Navigate to Frontend
+
+```bash
+cd ai-assignment-generator-Nextjs-typescript/client
+```
+
+---
+
+## 3. Install Dependencies
+
+Using pnpm:
+
+```bash
+pnpm install
+```
+
+or npm:
+
+```bash
+npm install
+```
+
+---
+
+## 4. Run Development Server
+
+```bash
+pnpm dev
+```
+
+or
+
+```bash
+npm run dev
+```
+
+---
+
+## 5. Open Browser
+
+```txt
+http://localhost:3000
+```
+
+---
+
+
 # Features Implemented
 
 ## Assignment Dashboard
@@ -220,119 +336,7 @@ client/
 └── styles/
 ```
 
----
 
-# Local Setup
-
-## 1. Clone Repository
-
-```bash
-git clone https://github.com/KavyaKapoor420/ai-assignment-generator-Nextjs-typescript.git
-```
-
----
-
-## 2. Navigate to Frontend
-
-```bash
-cd ai-assignment-generator-Nextjs-typescript/client
-```
-
----
-
-## 3. Install Dependencies
-
-Using pnpm:
-
-```bash
-pnpm install
-```
-
-or npm:
-
-```bash
-npm install
-```
-
----
-
-## 4. Run Development Server
-
-```bash
-pnpm dev
-```
-
-or
-
-```bash
-npm run dev
-```
-
----
-
-## 5. Open Browser
-
-```txt
-http://localhost:3000
-```
-
----
-
-# Architecture Overview
-
-## High-Level Flow
-
-```mermaid
-flowchart TD
-
-A[Teacher Opens Platform]
---> B[Create Assignment]
-
-B --> C[Fill Assignment Details]
-
-C --> D[Select Question Types]
-C --> E[Upload Reference Files]
-C --> F[Add Instructions]
-
-D --> G[Generate Assessment]
-
-G --> H[Structured Prompt Builder]
-
-H --> I[AI Processing Layer]
-
-I --> J[Question Paper Generator]
-
-J --> K[Formatted Output UI]
-
-K --> L[Export / Download PDF]
-```
-
----
-
-# Planned Backend Workflow
-
-```mermaid
-flowchart LR
-
-A[Frontend Request]
---> B[Express API]
-
-B --> C[BullMQ Queue]
-
-C --> D[Worker]
-
-D --> E[AI Generation]
-
-E --> F[MongoDB Storage]
-
-F --> G[Redis Cache]
-
-G --> H[WebSocket Update]
-
-H --> I[Frontend UI Update]
-```
-
----
 
 # Design & UI Decisions
 
