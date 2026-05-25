@@ -1,4 +1,5 @@
-// import { useRouter } from "@tanstack/react-router";
+"use client";
+
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Bell, ChevronDown, LayoutGrid } from "lucide-react";
 
@@ -30,11 +31,9 @@ export function Topbar({ title = "Assignment" }: { title?: string }) {
             <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-brand" />
           </button>
           <button className="flex items-center gap-2 pr-2 pl-1 py-1 rounded-full hover:bg-secondary transition">
-            <img
-              src="/images/avatar.png"
-              alt="John Doe avatar"
-              className="h-8 w-8 rounded-full object-cover"
-            />
+            <span className="grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground text-xs font-semibold">
+              JD
+            </span>
             <span className="text-sm font-medium hidden sm:inline">John Doe</span>
             <ChevronDown className="h-4 w-4 text-muted-foreground" />
           </button>

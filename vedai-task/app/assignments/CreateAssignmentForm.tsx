@@ -1,13 +1,12 @@
-// import { useNavigate } from "@tanstack/react-router";
+"use client";
+
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, CalendarDays, Mic, Plus, UploadCloud } from "lucide-react";
 import { useAssignmentStore } from "@/store/assignmentStore";
 import { QuestionTypeRowItem } from "./QuestionTypeRow";
-// import { QuestionTypeRowItem } from "./QuestionTypeRow";
 
 export function CreateAssignmentForm() {
-//   const navigate = useNavigate();
-const router = useRouter();
+  const router = useRouter();
   const { draft, setField, addQuestionType } = useAssignmentStore();
   const totalQuestions = draft.questionTypes.reduce((s, q) => s + q.count, 0);
   const totalMarks = draft.questionTypes.reduce((s, q) => s + q.count * q.marks, 0);
@@ -130,14 +129,12 @@ const router = useRouter();
 
       <div className="mt-6 flex items-center justify-between">
         <button
-        //   onClick={() => navigate({ to: "/assignments" })}
-           onClick={() => router.push("/assignments")}
+          onClick={() => router.push("/assignments")}
           className="inline-flex items-center gap-2 rounded-full bg-card border border-border px-5 py-2.5 text-sm hover:bg-secondary transition"
         >
           <ArrowLeft className="h-4 w-4" /> Previous
         </button>
         <button
-        //   onClick={() => navigate({ to: "/assignments/generating" })}
           onClick={() => router.push("/assignments/generating")}
           className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-2.5 text-sm font-medium hover:opacity-95 transition"
         >

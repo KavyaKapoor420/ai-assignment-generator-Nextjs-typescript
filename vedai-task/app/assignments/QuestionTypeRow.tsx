@@ -1,3 +1,5 @@
+"use client";
+
 import { Minus, Plus, X } from "lucide-react";
 import { QUESTION_TYPES, useAssignmentStore } from "@/store/assignmentStore";
 import type { QuestionTypeRow as Row } from "@/store/assignmentStore";

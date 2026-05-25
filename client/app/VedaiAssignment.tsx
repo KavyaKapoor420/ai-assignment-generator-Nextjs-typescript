@@ -1,6 +1,7 @@
 
 'use client'
 import React, { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import VedaLogo from "./VedaiLogo";
 import { useIsMobile } from "@/hooks/useIsMobile";
@@ -405,9 +406,11 @@ const VedaAIAssignments: React.FC = () => {
     background: "#D9D9D9",
   }}
 >
-  <img
+  <Image
     src={USER_AVATAR_SRC}
     alt="User"
+    width={30}
+    height={30}
     style={{
       width: "100%",
       height: "100%",
@@ -603,9 +606,11 @@ const VedaAIAssignments: React.FC = () => {
             }}
           >
             <div style={{ width: "46px", height: "46px", borderRadius: "11px", overflow: "hidden", background: "#D9D9D9", flexShrink: 0 }}>
-              <img
+              <Image
                 src={USER_AVATAR_SRC}
                 alt="Delhi Public School"
+                width={46}
+                height={46}
                 style={{ width: "100%", height: "100%", objectFit: "cover" }}
               />
             </div>
@@ -660,9 +665,11 @@ const VedaAIAssignments: React.FC = () => {
     background: "#D9D9D9",
   }}
 >
-  <img
+  <Image
     src={USER_AVATAR_SRC}
     alt="User"
+    width={30}
+    height={30}
     style={{
       width: "100%",
       height: "100%",

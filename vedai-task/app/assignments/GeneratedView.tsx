@@ -1,7 +1,7 @@
-'use client'
+"use client";
+
 import { useEffect, useState } from "react";
-// import { useNavigate } from "@tanstack/react-router";
-import {useRouter} from 'next/navigation'
+import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
 
 const steps = [
@@ -12,8 +12,7 @@ const steps = [
 ];
 
 export function GeneratingView() {
-//   const navigate = useNavigate();
-const router=useRouter() 
+  const router = useRouter();
 
   const [progress, setProgress] = useState(0);
 

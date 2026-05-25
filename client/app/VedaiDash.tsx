@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import VedaLogo from "./VedaiLogo";
 import { useIsMobile } from "@/hooks/useIsMobile";
@@ -201,9 +202,11 @@ const VedaAIDashboard: React.FC = () => {
               <span style={{ position: "absolute", top: "1px", right: "0px", width: "8px", height: "8px", borderRadius: "50%", background: "#F57B42", border: "1.5px solid white" }} />
             </div>
             <div style={{ width: "32px", height: "32px", borderRadius: "50%", overflow: "hidden", background: "#D9D9D9" }}>
-              <img
+              <Image
                 src={USER_AVATAR_SRC}
                 alt="User avatar"
+                width={32}
+                height={32}
                 style={{ width: "100%", height: "100%", objectFit: "cover" }}
               />
             </div>
@@ -439,11 +442,13 @@ const VedaAIDashboard: React.FC = () => {
             }}
           >
             {/* Avatar — replace with <img src={SCHOOL_AVATAR_SRC} /> */}
-            <img
-                src={USER_AVATAR_SRC}
-                alt="User avatar"
-                style={{ width: 33, height: 33, borderRadius: "50%", objectFit: "cover" }}
-              />
+            <Image
+              src={USER_AVATAR_SRC}
+              alt="User avatar"
+              width={33}
+              height={33}
+              style={{ width: 33, height: 33, borderRadius: "50%", objectFit: "cover" }}
+            />
             {/* <div
               style={{
                 width: "50px",
@@ -546,9 +551,11 @@ const VedaAIDashboard: React.FC = () => {
             {/* User */}
             <div style={{ display: "flex", alignItems: "center", gap: "9px", cursor: "pointer" }}>
               {/* Avatar image */}
-              <img
+              <Image
                 src={USER_AVATAR_SRC}
                 alt="User avatar"
+                width={33}
+                height={33}
                 style={{ width: 33, height: 33, borderRadius: "50%", objectFit: "cover" }}
               />
               {/* <div
