@@ -26,21 +26,40 @@ Teachers can:
 
 ---
 
+# Assignment requirements (brief)
+
+| Requirement | Status | Where |
+|-------------|--------|--------|
+| Figma-based UI (create, list, output) | Done | `client/` |
+| Form: file upload, due date, question types, marks, instructions | Done | `client/app/CreateAssignment.jsx` |
+| Validation (no empty / negative values) | Done | Create form `handleSubmit` |
+| Zustand state + WebSocket | Done | `client/store/`, `client/hooks/useAssignmentSocket.ts` |
+| AI → structured sections/questions/difficulty/marks | Done | `backend/src/server.ts` (Zod + OpenAI) |
+| No raw LLM on screen | Done | `client/app/GeneratedOutput.jsx` |
+| Backend: Express, MongoDB, Redis, BullMQ, WebSocket | Done | `backend/src/server.ts` |
+| Output: student info, sections, difficulty badges, marks | Done | `GeneratedOutput.jsx` |
+| Bonus: PDF download, Regenerate | Done | API + output page buttons |
+
+**User flow:** `/assignments` → `/assignments/create` → **Next** (API) → `/assignments/generating` (socket) → `/assignments/output` (structured paper + PDF).
+
+---
+
 # Project structure
 
 ```txt
 Vedai-assignment/
-├── vedai-task/          # Main Next.js frontend (App Router)
+├── client/              # Primary frontend (Figma UI — use this)
 ├── backend/             # Express API + workers (single-file server)
-├── client/              # Alternate / earlier Next.js UI
+├── vedai-task/          # Secondary UI prototype (not wired as main app)
+├── docker-compose.yml   # Redis + MongoDB for local dev
 └── README.md
 ```
 
 | Folder | Role |
 |--------|------|
-| `vedai-task/` | Primary UI  create, generating, output pages |
+| `client/` | **Main frontend** — assignments, create, generating, output |
 | `backend/` | REST API, MongoDB, Redis, BullMQ, Socket.IO, OpenAI, PDF |
-| `client/` | Additional Next.js frontend variant |
+| `vedai-task/` | Alternate Next.js UI (optional) |
 
 ---
 
@@ -50,7 +69,7 @@ Vedai-assignment/
 
 ```mermaid
 sequenceDiagram
-  participant UI as Next.js (vedai-task)
+  participant UI as Next.js (client)
   participant API as Express API
   participant Q as BullMQ
   participant W as Worker
@@ -157,7 +176,7 @@ Expect `"mongo": true` and `"redis": true`.
 **Step 6 — Run the frontend** (separate terminal)
 
 ```bash
-cd vedai-task
+cd client
 cp .env.local.example .env.local
 npm install
 npm run dev
@@ -207,12 +226,12 @@ See `backend/.env.example` for all variables. **`OPENAI_API_KEY`** is optional  
 
 ---
 
-## Frontend setup (`vedai-task/`)
+## Frontend setup (`client/` — primary app)
 
 ```bash
-cd vedai-task
+cd client
 cp .env.local.example .env.local
-npm install
+npm install   # or pnpm install
 npm run dev
 ```
 
@@ -225,19 +244,17 @@ NEXT_PUBLIC_SOCKET_URL=http://localhost:5000
 
 Open: `http://localhost:3000`
 
----
-
-## Alternate frontend (`client/`)
-
-```bash
-cd client
-pnpm install   # or npm install
-pnpm dev
-```
+**Routes:** `/assignments` · `/assignments/create` · `/assignments/generating` · `/assignments/output`
 
 ---
 
-# Frontend features & structure
+## Alternate frontend (`vedai-task/`)
+
+Optional second UI; same backend env vars. Not the main submission frontend.
+
+---
+
+# Frontend features & structure (`client/`)
 
 ## Features implemented
 
@@ -274,22 +291,20 @@ pnpm dev
 ## Frontend project structure
 
 ```txt
-vedai-task/
+client/
 ├── app/
 │   ├── assignments/
-│   │   ├── create/
-│   │   ├── generating/
-│   │   ├── output/
+│   │   ├── create/page.tsx
+│   │   ├── generating/page.tsx
+│   │   ├── output/page.tsx
 │   │   └── page.tsx
-│   └── layout/
-├── components/
-├── hooks/
-│   └── useAssignmentSocket.ts
-├── lib/
-│   └── api.ts
-├── store/
-│   └── assignmentStore.ts
-└── app/data/mockAssignments.tsx
+│   ├── CreateAssignment.jsx      # Main create form (Figma)
+│   ├── GeneratingAssignment.jsx  # WebSocket progress
+│   ├── GeneratedOutput.jsx       # Structured exam paper
+│   └── VedaiAssignment.tsx       # Assignments list
+├── hooks/useAssignmentSocket.ts
+├── lib/api.ts
+└── store/assignmentStore.ts      # Zustand
 ```
 
 ## Frontend integration
@@ -618,7 +633,7 @@ PDF_DIR=./generated-pdfs
 CACHE_TTL_SEC=300
 ```
 
-### Frontend (`vedai-task/.env.local`)
+### Frontend (`client/.env.local`)
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:5000/api
@@ -631,7 +646,7 @@ NEXT_PUBLIC_SOCKET_URL=http://localhost:5000
 
 | Component | Suggested platform |
 |-----------|-------------------|
-| Frontend (`vedai-task`) | [Vercel](https://vercel.com) |
+| Frontend (`client`) | [Vercel](https://vercel.com) |
 | Backend API + workers | [Railway](https://railway.app) or [Render](https://render.com) |
 | MongoDB | [MongoDB Atlas](https://www.mongodb.com/atlas) |
 | Redis | [Upstash](https://upstash.com) or Railway Redis |
@@ -651,7 +666,7 @@ Set all variables from `backend/.env.example` on the host. Point frontend env va
 
 1. Start **Redis** and **MongoDB**
 2. `cd backend && npm run dev`  API on port **5000**, workers run in-process
-3. `cd vedai-task && npm run dev`  UI on port **3000**
+3. `cd client && npm run dev`  UI on port **3000**
 4. Create assignment → auto-triggers generate → watch `/assignments/generating`
 5. On complete → `/assignments/output` loads paper from API
 6. Download PDF when `pdfAvailable` is true
@@ -688,7 +703,7 @@ Set all variables from `backend/.env.example` on the host. Point frontend env va
 
 # Tech stack
 
-## Frontend (`vedai-task/`)
+## Frontend (`client/`)
 
 - Next.js 15+ (App Router)
 - TypeScript

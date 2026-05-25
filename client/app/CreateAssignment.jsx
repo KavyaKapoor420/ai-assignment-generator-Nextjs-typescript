@@ -1,9 +1,11 @@
 
 'use client'
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import VedaLogo from "./VedaiLogo";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { createAssignment, triggerGeneration } from "@/lib/api";
+import { useAssignmentStore } from "@/store/assignmentStore";
 
 const USER_AVATAR_SRC = "/john-doe-image.jpg";
 
@@ -191,10 +193,14 @@ const QUESTION_TYPE_OPTIONS = [
 // ── Main Component ─────────────────────────────────────────────────────────────
 export default function CreateAssignment() {
   const router = useRouter();
+  const { setActiveAssignmentId, setAssignmentTitle } = useAssignmentStore();
   const [isDragging, setIsDragging] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [title, setTitle] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [additionalInfo, setAdditionalInfo] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState(null);
   const isMobile = useIsMobile();
 
   const [questionTypes, setQuestionTypes] = useState([
@@ -223,6 +229,51 @@ export default function CreateAssignment() {
     setIsDragging(false);
     const file = e.dataTransfer.files[0];
     if (file) setUploadedFile(file);
+  };
+
+  const handleSubmit = async () => {
+    setFormError(null);
+    if (!title.trim()) {
+      setFormError("Assignment title is required");
+      return;
+    }
+    if (!dueDate.trim()) {
+      setFormError("Due date is required");
+      return;
+    }
+    if (totalQuestions <= 0 || totalMarks <= 0) {
+      setFormError("Question count and marks must be positive");
+      return;
+    }
+    for (const qt of questionTypes) {
+      if (qt.questions < 1 || qt.marks < 1) {
+        setFormError("Each question type needs at least 1 question and 1 mark");
+        return;
+      }
+    }
+
+    setSubmitting(true);
+    try {
+      const assignment = await createAssignment({
+        title: title.trim(),
+        dueDate: dueDate.trim(),
+        additionalInfo,
+        questionTypes: questionTypes.map((q) => ({
+          type: q.type,
+          count: q.questions,
+          marks: q.marks,
+        })),
+        file: uploadedFile,
+      });
+      setActiveAssignmentId(assignment.id);
+      setAssignmentTitle(title.trim());
+      await triggerGeneration(assignment.id);
+      router.push("/assignments/generating");
+    } catch (err) {
+      setFormError(err?.message ?? "Failed to connect to backend. Is it running?");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   // ── SIDEBAR ────────────────────────────────────────────────────────────────
@@ -360,6 +411,35 @@ export default function CreateAssignment() {
           <p style={{ margin: "3px 0 0", fontSize: "13px", color: T.textSecondary, fontFamily: "'Inter', sans-serif" }}>Basic information about your assignment</p>
         </div>
 
+        {formError && (
+          <p style={{ margin: 0, padding: "12px 14px", borderRadius: "12px", background: "#fdecea", color: "#c0392b", fontSize: "13px" }}>
+            {formError}
+          </p>
+        )}
+
+        <div>
+          <label style={{ display: "block", fontSize: "14px", fontWeight: 700, color: T.textPrimary, marginBottom: "8px", fontFamily: "'Inter', sans-serif" }}>Assignment Title</label>
+          <input
+            type="text"
+            placeholder="e.g. Quiz on Electricity"
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            style={{
+              width: "100%",
+              height: "46px",
+              border: `1.5px solid ${T.borderLight}`,
+              borderRadius: "12px",
+              padding: "0 16px",
+              fontSize: "14px",
+              color: T.textPrimary,
+              fontFamily: "'Inter', sans-serif",
+              outline: "none",
+              background: "#fff",
+              boxSizing: "border-box",
+            }}
+          />
+        </div>
+
         {/* File Upload */}
         <div>
           <div
@@ -384,7 +464,7 @@ export default function CreateAssignment() {
             <p style={{ margin: 0, fontSize: "14px", fontWeight: 500, color: T.textPrimary, fontFamily: "'Inter', sans-serif" }}>
               {uploadedFile ? uploadedFile.name : "Choose a file or drag & drop it here"}
             </p>
-            <p style={{ margin: 0, fontSize: "12px", color: T.textMuted, fontFamily: "'Inter', sans-serif" }}>JPEG, PNG, upto 10MB</p>
+            <p style={{ margin: 0, fontSize: "12px", color: T.textMuted, fontFamily: "'Inter', sans-serif" }}>PDF or text, up to 10MB (optional)</p>
             <button
               style={{
                 marginTop: "6px",
@@ -402,7 +482,7 @@ export default function CreateAssignment() {
             >
               Browse Files
             </button>
-            <input ref={fileInputRef} type="file" accept="image/*,.pdf" style={{ display: "none" }} onChange={e => e.target.files?.[0] && setUploadedFile(e.target.files[0])} />
+            <input ref={fileInputRef} type="file" accept=".pdf,.txt,application/pdf,text/plain" style={{ display: "none" }} onChange={e => e.target.files?.[0] && setUploadedFile(e.target.files[0])} />
           </div>
           <p style={{ margin: "8px 0 0", fontSize: "12px", color: T.textMuted, textAlign: "center", fontFamily: "'Inter', sans-serif" }}>
             Upload images of your preferred document/image
@@ -583,16 +663,20 @@ export default function CreateAssignment() {
           Previous
         </button>
         <button
+          type="button"
+          disabled={submitting}
+          onClick={handleSubmit}
           style={{
             display: "flex", alignItems: "center", gap: "8px",
             height: "46px", padding: "0 28px",
             background: T.textPrimary, border: "none",
-            borderRadius: T.buttonRadius, cursor: "pointer",
+            borderRadius: T.buttonRadius, cursor: submitting ? "wait" : "pointer",
             fontSize: "14px", fontWeight: 600, color: "#fff",
             fontFamily: "'Inter', sans-serif",
+            opacity: submitting ? 0.7 : 1,
           }}
         >
-          Next
+          {submitting ? "Submitting…" : "Next"}
           <IcArrowRight size={14} color="#fff" />
         </button>
       </div>
@@ -665,16 +749,28 @@ export default function CreateAssignment() {
             <p style={{ margin: "3px 0 0", fontSize: "12px", color: T.textSecondary }}>Basic information about your assignment</p>
           </div>
 
+          {formError && (
+            <p style={{ margin: 0, padding: "10px 12px", borderRadius: "10px", background: "#fdecea", color: "#c0392b", fontSize: "12px" }}>
+              {formError}
+            </p>
+          )}
+
+          <div>
+            <label style={{ display: "block", fontSize: "13px", fontWeight: 700, color: T.textPrimary, marginBottom: "7px" }}>Assignment Title</label>
+            <input type="text" placeholder="e.g. Quiz on Electricity" value={title} onChange={e => setTitle(e.target.value)}
+              style={{ width: "100%", height: "42px", border: `1.5px solid ${T.borderLight}`, borderRadius: "10px", padding: "0 12px", fontSize: "13px", outline: "none", boxSizing: "border-box" }} />
+          </div>
+
           {/* Upload */}
           <div
             style={{ border: "2px dashed #C8C8C8", borderRadius: "14px", padding: "24px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", background: "#FAFAFA" }}
             onClick={() => fileInputRef.current?.click()}
           >
             <IcUpload size={30} color={T.textSecondary} />
-            <p style={{ margin: 0, fontSize: "13px", fontWeight: 500, color: T.textPrimary, textAlign: "center" }}>Choose a file or drag & drop it here</p>
-            <p style={{ margin: 0, fontSize: "11px", color: T.textMuted }}>JPEG, PNG, upto 10MB</p>
+            <p style={{ margin: 0, fontSize: "13px", fontWeight: 500, color: T.textPrimary, textAlign: "center" }}>{uploadedFile ? uploadedFile.name : "Choose a file or drag & drop it here"}</p>
+            <p style={{ margin: 0, fontSize: "11px", color: T.textMuted }}>PDF or text, up to 10MB (optional)</p>
             <button style={{ marginTop: "4px", padding: "7px 18px", borderRadius: "999px", border: `1px solid ${T.borderLight}`, background: "#fff", fontSize: "13px", fontWeight: 500, color: T.textPrimary, cursor: "pointer" }}>Browse Files</button>
-            <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => e.target.files?.[0] && setUploadedFile(e.target.files[0])} />
+            <input ref={fileInputRef} type="file" accept=".pdf,.txt,application/pdf,text/plain" style={{ display: "none" }} onChange={e => e.target.files?.[0] && setUploadedFile(e.target.files[0])} />
           </div>
           <p style={{ margin: "-10px 0 0", fontSize: "11px", color: T.textMuted, textAlign: "center" }}>Upload images of your preferred document/image</p>
 
@@ -752,8 +848,8 @@ export default function CreateAssignment() {
           <IcArrowLeft size={14} color={T.textPrimary} />
           Previous
         </button>
-        <button style={{ flex: 1, height: "44px", background: T.textPrimary, border: "none", borderRadius: T.buttonRadius, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", cursor: "pointer", fontSize: "14px", fontWeight: 600, color: "#fff", fontFamily: "'Inter', sans-serif" }}>
-          Next
+        <button type="button" disabled={submitting} onClick={handleSubmit} style={{ flex: 1, height: "44px", background: T.textPrimary, border: "none", borderRadius: T.buttonRadius, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", cursor: submitting ? "wait" : "pointer", fontSize: "14px", fontWeight: 600, color: "#fff", fontFamily: "'Inter', sans-serif", opacity: submitting ? 0.7 : 1 }}>
+          {submitting ? "Submitting…" : "Next"}
           <IcArrowRight size={14} color="#fff" />
         </button>
       </div>
