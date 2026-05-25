@@ -95,17 +95,99 @@ flowchart TD
 ## Prerequisites
 
 - Node.js 18+
-- MongoDB (local or [Atlas](https://www.mongodb.com/atlas))
-- Redis (local or Upstash / Railway)
+- **Docker Desktop** (recommended) — runs Redis + MongoDB without `brew install`
+- Or install Redis/MongoDB manually / use Atlas + Upstash in the cloud
+
+---
+
+### Option A — Redis & MongoDB with Docker (recommended)
+
+**Step 1 — Install Docker Desktop**
+
+1. Download: [https://www.docker.com/products/docker-desktop/](https://www.docker.com/products/docker-desktop/)
+2. Install and open **Docker Desktop**
+3. Wait until it says **Docker is running** (whale icon in the menu bar)
+
+**Step 2 — Start Redis and MongoDB**
+
+From the **repo root** (`Vedai-assignment/`):
 
 ```bash
-# macOS examples
+cd /path/to/Vedai-assignment
+docker compose up -d
+```
+
+Check containers are healthy:
+
+```bash
+docker compose ps
+```
+
+You should see `vedaai-redis` and `vedaai-mongodb` with status **running**.
+
+**Step 3 — Backend `.env`**
+
+```bash
+cd backend
+cp .env.example .env
+```
+
+These values already match Docker (no change needed if you use defaults):
+
+```env
+MONGODB_URI=mongodb://127.0.0.1:27017/vedaai
+REDIS_URL=redis://127.0.0.1:6379
+```
+
+**Step 4 — Install and run the API**
+
+```bash
+npm install
+npm run dev
+```
+
+**Step 5 — Verify**
+
+```bash
+curl http://localhost:5000/api/health
+```
+
+Expect `"mongo": true` and `"redis": true`.
+
+**Step 6 — Run the frontend** (separate terminal)
+
+```bash
+cd vedai-task
+cp .env.local.example .env.local
+npm install
+npm run dev
+```
+
+Open `http://localhost:3000`.
+
+**Useful Docker commands**
+
+| Command | What it does |
+|---------|----------------|
+| `docker compose up -d` | Start Redis + MongoDB in background |
+| `docker compose down` | Stop containers (keeps data volumes) |
+| `docker compose down -v` | Stop and **delete** stored DB data |
+| `docker compose logs -f redis` | Watch Redis logs |
+| `docker compose logs -f mongodb` | Watch MongoDB logs |
+
+---
+
+### Option B — Install with Homebrew (no Docker)
+
+```bash
 brew install redis
 brew services start redis
 
 brew tap mongodb/brew && brew install mongodb-community
 brew services start mongodb-community
 ```
+
+Then use the same `backend/.env` URLs as above.
 
 ---
 

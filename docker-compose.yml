@@ -1,0 +1,33 @@
+# Local dev: Redis + MongoDB (no brew install needed)
+# Run from repo root: docker compose up -d
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: vedaai-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - vedaai_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  mongodb:
+    image: mongo:7
+    container_name: vedaai-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - vedaai_mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  vedaai_redis_data:
+  vedaai_mongo_data:
