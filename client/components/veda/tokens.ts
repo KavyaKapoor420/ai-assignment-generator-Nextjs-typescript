@@ -1,0 +1,15 @@
+export const T = {
+  bgPage: "#EFEFEF",
+  bgCard: "#FFFFFF",
+  bgSidebar: "#FFFFFF",
+  textPrimary: "#2B2B2B",
+  textSecondary: "#8C8C8C",
+  textMuted: "#A7A7A7",
+  textInverse: "#FFFFFF",
+  accentOrange: "#FF6A2A",
+  successGreen: "#39C86A",
+  borderLight: "#E6E6E6",
+  cardRadius: "20px",
+  inputRadius: "28px",
+  buttonRadius: "999px",
+};
